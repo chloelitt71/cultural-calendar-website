@@ -2,10 +2,12 @@ import { MOCK_MOMENTS } from '../data/moments.mock';
 import type { CulturalMoment, MomentSignalCategory } from '../pulse/types';
 
 /**
- * Browser-safe path: local and production route through `/api/newsapi`.
+ * Browser-safe path:
+ * - local dev uses Vite proxy (`/news-api` -> newsapi.org)
+ * - production uses serverless proxy (`/api/newsapi`)
  */
 function newsApiV2Base(): string {
-  return '/api/newsapi';
+  return import.meta.env.DEV ? '/news-api' : '/api/newsapi';
 }
 
 function inferCategory(title: string): MomentSignalCategory {

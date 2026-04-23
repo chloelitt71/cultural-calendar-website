@@ -13,7 +13,7 @@ type NewsEverythingResponse = {
   articles?: NewsEverythingArticle[];
 };
 
-const newsBase = () => '/api/newsapi';
+const newsBase = () => (import.meta.env.DEV ? '/news-api' : '/api/newsapi');
 
 const SOURCE_QUALITY: Record<string, number> = {
   Vogue: 3,
