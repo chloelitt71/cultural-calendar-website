@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/news-api/:path*",
+      "destination": "https://newsapi.org/v2/:path*"
+    },
+    {
+      "source": "/kg-api/:path*",
+      "destination": "https://kgsearch.googleapis.com/v1/:path*"
+    }
+  ]
+}
