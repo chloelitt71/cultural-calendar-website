@@ -42,7 +42,7 @@ function filterRows(
 }
 
 export function CalendarPage() {
-  const { events, slices, loading, error } = useCalendarIntel();
+  const { events, loading, error } = useCalendarIntel();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<CalendarFilter>('All');
   const [status, setStatus] = useState<'All' | EventStatus>('All');
