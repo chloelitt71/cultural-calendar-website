@@ -144,18 +144,11 @@ export function TalentIntelPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
-  const newsApiKey = import.meta.env.VITE_NEWS_API_KEY as string | undefined;
-  const hasNewsApiKey = Boolean(newsApiKey?.trim());
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     const term = q.trim();
     if (!term) return;
-    if (!hasNewsApiKey) {
-      setError('Lookup is temporarily unavailable. Please try again shortly.');
-      setProfile(null);
-      return;
-    }
     setHasSearched(true);
     setLoading(true);
     setError(null);

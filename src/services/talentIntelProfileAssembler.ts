@@ -115,9 +115,6 @@ export async function assembleTalentIntelProfile(
 ): Promise<TalentIntelAssemblyResult> {
   const q = rawQuery.trim();
   const newsKey = import.meta.env.VITE_NEWS_API_KEY as string | undefined;
-  if (!newsKey?.trim()) {
-    throw new Error('NewsAPI key not detected. Add VITE_NEWS_API_KEY to your environment.');
-  }
 
   const newsBundle = await fetchTalentNewsBundle(q, newsKey);
   const titles = newsBundle.raw.map((a) => a.title).filter(Boolean);

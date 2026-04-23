@@ -2,11 +2,10 @@ import { MOCK_MOMENTS } from '../data/moments.mock';
 import type { CulturalMoment, MomentSignalCategory } from '../pulse/types';
 
 /**
- * Browser-safe path: Vite dev proxies `/news-api` → `https://newsapi.org/v2`.
- * Production hosts should add a matching rewrite or serverless route.
+ * Browser-safe path: local and production route through `/api/newsapi`.
  */
 function newsApiV2Base(): string {
-  return '/news-api';
+  return '/api/newsapi';
 }
 
 function inferCategory(title: string): MomentSignalCategory {
@@ -140,7 +139,7 @@ function toNewsApiDate(daysAgo: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-async function fetchNewsApiEverything(apiKey: string): Promise<CulturalMoment[]> {
+async function fetchNewsApiEverything(apiKey?: string): Promise<CulturalMoment[]> {
   const baseUrl = newsApiV2Base();
   const q = new URLSearchParams({
     q: '(celebrity OR influencer OR fashion OR beauty OR entertainment OR music OR film OR tv OR tiktok OR instagram)',
@@ -148,8 +147,8 @@ async function fetchNewsApiEverything(apiKey: string): Promise<CulturalMoment[]>
     sortBy: 'publishedAt',
     from: toNewsApiDate(30),
     pageSize: '50',
-    apiKey,
   });
+  if (apiKey?.trim()) q.set('apiKey', apiKey.trim());
 
   const res = await fetch(`${baseUrl}/everything?${q.toString()}`);
   if (!res.ok) return [];
@@ -195,14 +194,12 @@ export function filterMomentsWithValidUrl(moments: CulturalMoment[]): CulturalMo
  */
 export async function fetchCulturalMoments(): Promise<CulturalMoment[]> {
   const key = import.meta.env.VITE_NEWS_API_KEY?.trim();
-  if (key) {
-    try {
-      const fromApi = await fetchNewsApiEverything(key);
-      const withUrl = filterMomentsWithValidUrl(fromApi);
-      if (withUrl.length > 0) return withUrl;
-    } catch {
-      // fall through to mock
-    }
+  try {
+    const fromApi = await fetchNewsApiEverything(key);
+    const withUrl = filterMomentsWithValidUrl(fromApi);
+    if (withUrl.length > 0) return withUrl;
+  } catch {
+    // fall through to mock
   }
   return filterMomentsWithValidUrl([...MOCK_MOMENTS]);
 }

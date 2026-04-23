@@ -13,7 +13,7 @@ type NewsEverythingResponse = {
   articles?: NewsEverythingArticle[];
 };
 
-const newsBase = () => '/news-api';
+const newsBase = () => '/api/newsapi';
 
 const SOURCE_QUALITY: Record<string, number> = {
   Vogue: 3,
@@ -66,7 +66,7 @@ function withinLastDays(isoDate: string, days: number): boolean {
  */
 export async function fetchTalentNewsBundle(personName: string, apiKey: string | undefined): Promise<TalentNewsBundle> {
   const key = apiKey?.trim();
-  if (!key || !personName.trim()) return { coverage: [], raw: [] };
+  if (!personName.trim()) return { coverage: [], raw: [] };
 
   try {
     const q = personName.trim();
@@ -75,8 +75,8 @@ export async function fetchTalentNewsBundle(personName: string, apiKey: string |
       language: 'en',
       sortBy: 'publishedAt',
       pageSize: '25',
-      apiKey: key,
     });
+    if (key) params.set('apiKey', key);
     if (import.meta.env.DEV) {
       console.info('[WhoIsThis] Fetching NewsAPI /everything for:', q);
     }
