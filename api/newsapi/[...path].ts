@@ -15,8 +15,8 @@ export default async function handler(req: any, res: any) {
   }
 
   if (!target.searchParams.get('apiKey')) {
-    const key = process.env.VITE_NEWS_API_KEY || process.env.NEWS_API_KEY;
-    if (key) target.searchParams.set('apiKey', key);
+    res.status(400).json({ status: 'error', code: 'api_key_missing', message: 'Missing NewsAPI key.' });
+    return;
   }
 
   try {
