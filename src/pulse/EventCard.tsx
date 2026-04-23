@@ -1,23 +1,13 @@
 import type { EventItem } from './types';
 import type { EventStatus } from './types';
-
-const categoryTopLine: Partial<Record<EventItem['category'], string>> = {
-  Festivals: 'from-rose-300/70 via-fuchsia-300/30 to-transparent',
-  Awards: 'from-indigo-300/70 via-violet-300/30 to-transparent',
-  Sports: 'from-emerald-300/70 via-teal-300/30 to-transparent',
-  'Movie Premieres': 'from-sky-300/70 via-blue-300/30 to-transparent',
-  'TV Premieres': 'from-cyan-300/60 via-blue-300/25 to-transparent',
-  Fashion: 'from-purple-300/70 via-pink-300/30 to-transparent',
-  'Cultural Moments': 'from-amber-200/80 via-yellow-200/40 to-transparent',
-  'Live Events': 'from-orange-300/50 via-rose-300/25 to-transparent',
-};
+import { SaveToProjectButton } from '../components/SaveToProjectButton';
 
 const statusStyles: Record<EventStatus, string> = {
-  now: 'bg-red-500/20 text-red-300 border-red-500/40',
-  upcoming: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-  soon: 'bg-amber-500/20 text-amber-200 border-amber-500/40',
-  tbd: 'bg-zinc-600/20 text-zinc-300 border-zinc-500/40',
-  past: 'bg-zinc-700/30 text-zinc-300 border-zinc-600/60',
+  now: 'bg-[#f5f5f5] text-[#1c1c1c] border-[#d9d4cc]',
+  upcoming: 'bg-[#f5f5f5] text-[#1c1c1c] border-[#d9d4cc]',
+  soon: 'bg-[#f5f5f5] text-[#1c1c1c] border-[#d9d4cc]',
+  tbd: 'bg-[#f5f5f5] text-[#1c1c1c] border-[#d9d4cc]',
+  past: 'bg-[#f5f5f5] text-[#6f6f6f] border-[#d9d4cc]',
 };
 
 const statusLabel: Record<EventStatus, string> = {
@@ -28,7 +18,17 @@ const statusLabel: Record<EventStatus, string> = {
   past: 'Past',
 };
 
-const gradientFallback = 'from-zinc-400/50 via-zinc-500/20 to-transparent';
+function conciseBrandWhy(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return '';
+  const sentences = trimmed
+    .split(/(?<=[.!?])\s+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const picked = sentences.slice(0, 2).join(' ');
+  if (picked.length <= 185) return picked;
+  return `${picked.slice(0, 182).trim()}...`;
+}
 
 export function EventCard({
   event,
@@ -39,7 +39,7 @@ export function EventCard({
   status: EventStatus;
   muted?: boolean;
 }) {
-  const line = categoryTopLine[event.category] ?? gradientFallback;
+  const why = conciseBrandWhy(event.whyItMattersForBrands);
 
   return (
     <article
@@ -47,7 +47,6 @@ export function EventCard({
         muted ? 'opacity-60 grayscale hover:translate-y-0' : ''
       }`}
     >
-      <div className={`pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-r ${line}`} />
       {event.image && (
         <div className="relative -mx-1 mb-3 aspect-[21/9] overflow-hidden rounded-xl border border-white/10">
           <img
@@ -56,7 +55,7 @@ export function EventCard({
             className="h-full w-full object-cover object-center opacity-95 transition duration-500 group-hover:scale-[1.02]"
             loading="lazy"
           />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1c1c1c]/25 via-transparent to-transparent" />
         </div>
       )}
       <div className="mb-2 flex flex-1 flex-col">
@@ -68,27 +67,43 @@ export function EventCard({
               {event.location ? ` · ${event.location}` : ''}
             </p>
           </div>
-          <span
-            className={`shrink-0 rounded-full border px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wide ${statusStyles[status]}`}
-          >
-            {statusLabel[status]}
-          </span>
+          <div className="flex shrink-0 items-start gap-2">
+            <span
+              className={`rounded-lg border px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wide ${statusStyles[status]}`}
+            >
+              {statusLabel[status]}
+            </span>
+            <SaveToProjectButton
+              item={{
+                type: 'event',
+                sourceId: event.id,
+                originPage: 'calendar',
+                title: event.title,
+                subtitle: `${event.date}${event.location ? ` • ${event.location}` : ''}`,
+                description: why,
+                metadata: {
+                  category: event.category,
+                  source: event.source,
+                },
+              }}
+            />
+          </div>
         </div>
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-white/12 bg-zinc-900/55 px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide text-zinc-200">
+          <span className="rounded-lg border border-[#e0ddd8] bg-[#f5f5f5] px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide text-[#1c1c1c]">
             {event.category}
           </span>
           <span className="font-mono text-[10px] uppercase tracking-wide text-zinc-500">{event.source}</span>
         </div>
         {event.description && <p className="mb-2 text-sm leading-relaxed text-zinc-400">{event.description}</p>}
-        <div className="saas-panel-soft mt-auto rounded-2xl border border-[#c9a96e]/15 bg-black/35 p-3">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#c9a96e]">Why it matters for brands</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-zinc-200">{event.whyItMattersForBrands}</p>
+        <div className="saas-panel-soft mt-auto rounded-2xl border border-[#c84c2f]/15 bg-white p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#c84c2f]">Why it matters for brands</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-zinc-200">{why}</p>
         </div>
         {event.industries && event.industries.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {event.industries.map((tag) => (
-              <span key={tag} className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] text-zinc-400">
+              <span key={tag} className="rounded-lg border border-[#e0ddd8] bg-[#f5f5f5] px-2 py-0.5 font-mono text-[10px] text-[#1c1c1c]">
                 {tag}
               </span>
             ))}

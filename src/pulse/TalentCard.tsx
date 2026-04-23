@@ -1,24 +1,56 @@
 import type { Specialty, TalentItem } from './types';
 
+interface CategoryTone {
+  tint: string;
+  border: string;
+  dot: string;
+}
+
+const CATEGORY_TONES: Record<string, CategoryTone> = {
+  beauty: { tint: '#F6EAEA', border: '#e6cfcd', dot: '#c9a6a2' },
+  fashion: { tint: '#F3EDE7', border: '#ddd2c6', dot: '#bba58d' },
+  entertainment: { tint: '#F1EFFA', border: '#d8d3ea', dot: '#aca1cf' },
+  lifestyle: { tint: '#EEF3EF', border: '#d1ddd3', dot: '#9cb49f' },
+  consumer: { tint: '#EEF2F5', border: '#d1d9e0', dot: '#9baab7' },
+};
+
+const specialtyToToneKey: Record<Specialty, keyof typeof CATEGORY_TONES> = {
+  Beauty: 'beauty',
+  Fashion: 'fashion',
+  Sports: 'consumer',
+  'Food & Beverage': 'consumer',
+  Music: 'entertainment',
+  Entertainment: 'entertainment',
+  Wellness: 'lifestyle',
+  Lifestyle: 'lifestyle',
+};
+
+function toneForSpecialty(specialty?: Specialty): CategoryTone {
+  if (!specialty) return CATEGORY_TONES.consumer;
+  return CATEGORY_TONES[specialtyToToneKey[specialty]];
+}
+
 const specialtyStyles: Record<Specialty, string> = {
-  Beauty: 'bg-pink-500/20 text-pink-300 border-pink-500/40',
-  Fashion: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-  Sports: 'bg-green-500/20 text-green-300 border-green-500/40',
-  'Food & Beverage': 'bg-orange-500/20 text-orange-300 border-orange-500/40',
-  Music: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
-  Entertainment: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
-  Wellness: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
-  Lifestyle: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40',
+  Beauty: 'bg-[#f5f5f5] text-[#1c1c1c]',
+  Fashion: 'bg-[#f5f5f5] text-[#1c1c1c]',
+  Sports: 'bg-[#f5f5f5] text-[#1c1c1c]',
+  'Food & Beverage': 'bg-[#f5f5f5] text-[#1c1c1c]',
+  Music: 'bg-[#f5f5f5] text-[#1c1c1c]',
+  Entertainment: 'bg-[#f5f5f5] text-[#1c1c1c]',
+  Wellness: 'bg-[#f5f5f5] text-[#1c1c1c]',
+  Lifestyle: 'bg-[#f5f5f5] text-[#1c1c1c]',
 };
 
 export function TalentCard({ profile }: { profile: TalentItem }) {
   const isEmerging = profile.tier === 'Emerging';
+  const primaryTone = toneForSpecialty(profile.specialty[0]);
 
   return (
-    <article className="event-tile rounded-[1.35rem] p-5">
+    <article className="event-tile relative overflow-hidden rounded-[1.35rem] p-5">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-1" style={{ backgroundColor: primaryTone.tint }} />
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <span className="subtle-float grid h-10 w-10 place-content-center rounded-full border border-white/8 bg-zinc-800/85 text-xl">
+          <span className="subtle-float grid h-10 w-10 place-content-center rounded-lg border border-[#e0ddd8] bg-[#f5f5f5] text-xl">
             {profile.emoji}
           </span>
           <div>
@@ -26,14 +58,19 @@ export function TalentCard({ profile }: { profile: TalentItem }) {
             <p className="text-xs text-zinc-400">{profile.type}</p>
           </div>
         </div>
-        <span className="rounded-full border border-[#c9a96e]/40 bg-[#c9a96e]/10 px-2 py-1 font-mono text-xs text-[#e8d5a3]">
+        <span className="rounded-lg px-2 py-1 font-mono text-xs text-[#1c1c1c]" style={{ border: `1px solid ${primaryTone.border}`, backgroundColor: primaryTone.tint }}>
           {profile.matchScore}%
         </span>
       </div>
 
       <div className="mb-3 flex flex-wrap gap-2">
         {profile.specialty.map((tag) => (
-          <span key={tag} className={`rounded-full border px-2 py-1 text-xs font-semibold ${specialtyStyles[tag]}`}>
+          <span
+            key={tag}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs font-semibold ${specialtyStyles[tag]}`}
+            style={{ borderColor: toneForSpecialty(tag).border }}
+          >
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: toneForSpecialty(tag).dot }} aria-hidden />
             {tag}
           </span>
         ))}
@@ -46,7 +83,7 @@ export function TalentCard({ profile }: { profile: TalentItem }) {
         <div className="saas-panel-soft mt-4 space-y-3 rounded-2xl p-3">
           <div className="flex items-center justify-between">
             <p className="text-xs uppercase tracking-wide text-zinc-400">Why trending</p>
-            <span className="rounded-full border border-amber-500/40 bg-amber-500/20 px-2 py-1 text-[11px] font-semibold text-amber-200">
+            <span className="rounded-lg border border-[#e0ddd8] bg-[#f5f5f5] px-2 py-1 text-[11px] font-semibold text-[#1c1c1c]">
               Act Early
             </span>
           </div>
@@ -56,8 +93,8 @@ export function TalentCard({ profile }: { profile: TalentItem }) {
               <span>Growth momentum</span>
               <span>{profile.growth}%</span>
             </div>
-            <div className="h-2 rounded-full bg-zinc-800">
-              <div className="h-2 rounded-full bg-gradient-to-r from-[#c9a96e] to-[#e8d5a3]" style={{ width: `${profile.growth}%` }} />
+            <div className="h-2 rounded-lg bg-[#ece9e4]">
+              <div className="h-2 rounded-lg bg-[#c84c2f]" style={{ width: `${profile.growth}%` }} />
             </div>
           </div>
         </div>

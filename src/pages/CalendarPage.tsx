@@ -97,33 +97,15 @@ export function CalendarPage() {
   return (
     <div className="page-transition section-shell space-y-10 pb-24 pt-8">
       <header className="max-w-3xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#c9a96e]">Calendar</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#c84c2f]">Calendar</p>
         <h1 className="mt-2 font-display text-[2rem] text-zinc-50 md:text-[2.45rem]">Event intelligence</h1>
         <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-          One pipeline for live moments, premieres, and cultural tentpoles — curated PR-first copy, with TMDb and Ticketmaster folded in when API keys
-          are set. Built for activation planning, not generic listings.
+          One pipeline for live moments, premieres, and cultural tentpoles — curated PR-first copy. Built for activation planning, not generic listings.
         </p>
         {loading && (
-          <p className="mt-2 font-mono text-xs text-[#c9a96e]/80">Loading external calendars…</p>
+          <p className="mt-2 font-mono text-xs text-[#c84c2f]/80">Loading external calendars…</p>
         )}
-        {error && (
-          <p className="mt-2 text-sm text-amber-300/90">{error}</p>
-        )}
-        <div className="mt-5 flex flex-wrap gap-x-8 gap-y-2 border-y border-white/10 py-3.5 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-          <span>
-            Live + Ticketmaster{' '}
-            <span className="text-zinc-200 tabular-nums">({slices.live.length})</span>
-          </span>
-          <span>
-            Movie premieres <span className="text-zinc-200 tabular-nums">({slices.moviePremieres.length})</span>
-          </span>
-          <span>
-            TV premieres <span className="text-zinc-200 tabular-nums">({slices.tvPremieres.length})</span>
-          </span>
-          <span>
-            Cultural tentpoles <span className="text-zinc-200 tabular-nums">({slices.culturalMoments.length})</span>
-          </span>
-        </div>
+        {error && <p className="mt-2 text-sm text-[#8f3b2a]">{error}</p>}
       </header>
 
       <section className="saas-panel-soft space-y-5 rounded-[1.4rem] p-5 md:p-6">
@@ -134,7 +116,7 @@ export function CalendarPage() {
             placeholder="Search title, city, category, or source…"
             className="saas-input w-full max-w-xl rounded-xl px-3 py-2.5 text-sm text-zinc-100"
           />
-          <div className="inline-flex flex-wrap gap-2 rounded-xl border border-white/10 bg-black/25 p-1">
+          <div className="inline-flex flex-wrap gap-2 rounded-xl border border-white/10 bg-white p-1">
             {(
               [
                 ['grid', 'Cards'],
@@ -146,7 +128,9 @@ export function CalendarPage() {
                 key={mode}
                 type="button"
                 onClick={() => setViewMode(mode)}
-                className={`rounded-lg px-3 py-2 text-xs font-medium ${viewMode === mode ? 'bg-white/12 text-zinc-100' : 'text-zinc-500 hover:bg-white/6'}`}
+                className={`rounded-lg px-3 py-2 text-xs font-medium ${
+                  viewMode === mode ? 'border border-[#e8b8ac] bg-[#fff1ee] text-[#c84c2f]' : 'text-zinc-500 hover:bg-[#f5f5f5]'
+                }`}
               >
                 {label}
               </button>
@@ -156,7 +140,7 @@ export function CalendarPage() {
 
         <div className="flex flex-wrap items-center gap-3">
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Sort</span>
-          <div className="inline-flex rounded-full border border-white/10 p-0.5">
+          <div className="inline-flex rounded-lg border border-white/10 p-0.5">
             {(
               [
                 ['soonest', 'Soonest'],
@@ -167,7 +151,9 @@ export function CalendarPage() {
                 key={k}
                 type="button"
                 onClick={() => setSort(k)}
-                className={`rounded-full px-3 py-1.5 text-xs ${sort === k ? 'bg-[#c9a96e]/20 text-[#e8d5a3]' : 'text-zinc-500 hover:text-zinc-300'}`}
+                className={`rounded-lg px-3 py-1.5 text-xs ${
+                  sort === k ? 'bg-[#fff1ee] text-[#c84c2f]' : 'text-zinc-500 hover:text-zinc-100'
+                }`}
               >
                 {lab}
               </button>
@@ -195,10 +181,10 @@ export function CalendarPage() {
                 key={pill}
                 type="button"
                 onClick={() => setFilter(pill)}
-                className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                className={`rounded-lg border px-3 py-1.5 text-xs transition ${
                   filter === pill
-                    ? 'border-[#c9a96e]/45 bg-[#c9a96e]/12 text-[#f0e4c8]'
-                    : 'border-white/10 bg-black/25 text-zinc-400 hover:border-white/20 hover:text-zinc-200'
+                    ? 'border-[#e8b8ac] bg-[#fff1ee] text-[#c84c2f]'
+                    : 'border-[#e0ddd8] bg-white text-zinc-400 hover:border-[#d6d1c9] hover:text-zinc-100'
                 }`}
               >
                 {pill}
@@ -214,18 +200,18 @@ export function CalendarPage() {
             <button
               type="button"
               onClick={() => setGridMonthOffset((o) => o - 1)}
-              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-zinc-300 hover:bg-white/10"
+              className="rounded-lg border border-[#e0ddd8] bg-white px-3 py-1.5 text-sm text-zinc-300 hover:bg-[#f5f5f5]"
             >
               ←
             </button>
             <button
               type="button"
               onClick={() => setGridMonthOffset((o) => o + 1)}
-              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-zinc-300 hover:bg-white/10"
+              className="rounded-lg border border-[#e0ddd8] bg-white px-3 py-1.5 text-sm text-zinc-300 hover:bg-[#f5f5f5]"
             >
               →
             </button>
-            <button type="button" onClick={() => setGridMonthOffset(0)} className="text-xs text-[#c9a96e] hover:text-[#e8d5a3]">
+            <button type="button" onClick={() => setGridMonthOffset(0)} className="text-xs text-[#c84c2f] hover:text-[#c84c2f]">
               This month
             </button>
           </div>
@@ -284,9 +270,8 @@ export function CalendarPage() {
       </section>
 
       <p className="max-w-2xl font-mono text-[10px] uppercase leading-relaxed tracking-[0.14em] text-zinc-600">
-        Sources: curated seed + TMDb (movies & TV) + Ticketmaster Discovery (US live). Set{' '}
-        <code className="text-zinc-500">VITE_TMDB_API_KEY</code> and <code className="text-zinc-500">VITE_TICKETMASTER_API_KEY</code> in{' '}
-        <code className="text-zinc-500">.env</code>. Add new providers in <code className="text-zinc-500">src/services/</code>.
+        Sources: curated seed + live event feeds + TMDb (movies & TV). Set required API keys in <code className="text-zinc-500">.env</code>. Add new
+        providers in <code className="text-zinc-500">src/services/</code>.
       </p>
     </div>
   );

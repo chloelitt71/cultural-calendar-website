@@ -1,4 +1,4 @@
-export type AppTab = 'home' | 'moments' | 'calendar' | 'talent-intel' | 'talent-match' | 'talent';
+export type AppTab = 'home' | 'moments' | 'calendar' | 'talent-intel' | 'talent-match' | 'talent' | 'projects';
 
 export type EventStatus = 'past' | 'now' | 'soon' | 'upcoming' | 'tbd';
 
@@ -114,6 +114,17 @@ export interface CuratedTalentProfile {
   brandUseCase: string;
   /** Spiking trajectory or breakout window — used for “Rising talent” */
   risingTalent: boolean;
+  /**
+   * Public representation clues only (no private contacts).
+   * Populate from verified public sources such as bios, official sites, or agency pages.
+   */
+  publicAgencyName?: string;
+  publicManagerName?: string;
+  publicRepresentationNote?: string;
+  publicWebsiteUrl?: string;
+  publicAgencyUrl?: string;
+  /** Optional explicit label if confidently known from public profile language. */
+  representationTag?: 'Agented' | 'Manager-led' | 'Independent';
   /** Actors */
   upcomingFilmTv?: string;
   premiereWindow?: string;

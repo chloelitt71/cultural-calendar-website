@@ -1,11 +1,12 @@
 import type { CulturalMoment, MomentSignalCategory } from '../pulse/types';
+import { SaveToProjectButton } from './SaveToProjectButton';
 
 const categoryStyle: Record<MomentSignalCategory, string> = {
-  Drama: 'border-rose-500/35 bg-rose-500/10 text-rose-200',
-  Trend: 'border-violet-500/35 bg-violet-500/10 text-violet-200',
-  'Influencer Momentum': 'border-cyan-500/35 bg-cyan-500/10 text-cyan-200',
-  'Celebrity Moment': 'border-amber-500/35 bg-amber-500/10 text-amber-200',
-  'Internet Conversation': 'border-sky-500/35 bg-sky-500/10 text-sky-200',
+  Drama: 'border-[#e0ddd8] bg-[#f5f5f5] text-[#1c1c1c]',
+  Trend: 'border-[#e0ddd8] bg-[#f5f5f5] text-[#1c1c1c]',
+  'Influencer Momentum': 'border-[#e0ddd8] bg-[#f5f5f5] text-[#1c1c1c]',
+  'Celebrity Moment': 'border-[#e0ddd8] bg-[#f5f5f5] text-[#1c1c1c]',
+  'Internet Conversation': 'border-[#e0ddd8] bg-[#f5f5f5] text-[#1c1c1c]',
 };
 
 function formatObserved(iso: string): string {
@@ -39,35 +40,54 @@ export function MomentCard({ moment }: { moment: CulturalMoment }) {
   if (!url || !/^https?:\/\//i.test(url)) return null;
 
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`Read article: ${moment.headline}`}
-      className="group relative block overflow-hidden rounded-[1.15rem] border border-white/10 bg-gradient-to-b from-white/[0.04] to-black/30 p-5 shadow-sm transition duration-200 hover:border-[#c9a96e]/35 hover:bg-white/[0.07] hover:shadow-[0_16px_48px_-20px_rgba(0,0,0,0.65)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c9a96e]/55"
+    <article
+      className="group relative block overflow-hidden rounded-[1.15rem] border border-[#eae7e2] bg-white p-5 shadow-sm transition duration-200 hover:border-[#d8d2c9] hover:shadow-[0_10px_24px_-20px_rgba(0,0,0,0.35)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c84c2f]/45"
     >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <span
-          className={`rounded-full border px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] ${categoryStyle[moment.category]}`}
+          className={`rounded-lg border px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] ${categoryStyle[moment.category]}`}
         >
           {moment.category}
         </span>
-        <span className="font-mono text-[11px] text-zinc-500">Signal {moment.signalStrength}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[11px] text-zinc-500">Signal {moment.signalStrength}</span>
+          <SaveToProjectButton
+            item={{
+              type: 'moment',
+              sourceId: moment.id,
+              originPage: 'moments',
+              title: moment.headline,
+              subtitle: moment.source,
+              description: moment.description,
+              url,
+              metadata: {
+                category: moment.category,
+                observedAt: moment.observedAt,
+              },
+            }}
+          />
+        </div>
       </div>
-      <h3 className="font-display text-lg leading-snug text-zinc-50 transition group-hover:text-white">{moment.headline}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-zinc-400 transition group-hover:text-zinc-300">{moment.description}</p>
+      <h3 className="font-display text-lg leading-snug text-zinc-50 transition">{moment.headline}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-zinc-400 transition">{moment.description}</p>
       <p className="mt-3 font-mono text-[11px] text-zinc-400">
         <span className="text-zinc-300">Source:</span> {moment.source}
         {formatObserved(moment.observedAt) ? ` · ${formatObserved(moment.observedAt)}` : ''}
       </p>
-      <p className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs font-medium text-[#c9a96e] transition group-hover:text-[#e8d5a3]">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Read article: ${moment.headline}`}
+        className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs font-medium text-[#c84c2f] transition group-hover:text-[#c84c2f]"
+      >
         <span>Read article</span>
         <ExternalLinkGlyph className="h-3.5 w-3.5 opacity-90" />
-      </p>
+      </a>
       <div className="mt-4 border-t border-white/8 pt-4">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c9a96e]/90">Why it matters for brands</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#c84c2f]/90">Why it matters for brands</p>
         <p className="mt-1.5 text-sm leading-relaxed text-zinc-200">{moment.whyForBrands}</p>
       </div>
-    </a>
+    </article>
   );
 }

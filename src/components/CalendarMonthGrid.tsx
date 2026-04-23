@@ -49,7 +49,7 @@ export function CalendarMonthGrid({ events, monthOffset }: { events: DecoratedCa
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/25 p-4">
+    <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white p-4">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="font-display text-lg text-zinc-100">{label}</h3>
         <p className="font-mono text-[10px] uppercase tracking-wide text-zinc-500">UTC grid · tap list for detail</p>
@@ -75,7 +75,7 @@ export function CalendarMonthGrid({ events, monthOffset }: { events: DecoratedCa
                   {c.day !== null && <div className="mb-1 font-mono text-[11px] text-zinc-500">{c.day}</div>}
                   <div className="space-y-1">
                     {list.slice(0, 2).map((ev) => (
-                      <div key={ev.id} className="truncate rounded border border-white/10 bg-black/40 px-1 py-0.5 font-mono text-[9px] leading-tight text-zinc-300" title={ev.title}>
+                      <div key={ev.id} className="truncate rounded border border-white/10 bg-white px-1 py-0.5 font-mono text-[9px] leading-tight text-zinc-300" title={ev.title}>
                         {ev.title}
                       </div>
                     ))}

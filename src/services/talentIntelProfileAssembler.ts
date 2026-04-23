@@ -115,12 +115,16 @@ export async function assembleTalentIntelProfile(
 ): Promise<TalentIntelAssemblyResult> {
   const q = rawQuery.trim();
   const newsKey = import.meta.env.VITE_NEWS_API_KEY as string | undefined;
+  if (!newsKey?.trim()) {
+    throw new Error('NewsAPI key not detected. Add VITE_NEWS_API_KEY to your environment.');
+  }
 
   const newsBundle = await fetchTalentNewsBundle(q, newsKey);
   const titles = newsBundle.raw.map((a) => a.title).filter(Boolean);
-  console.log('[WhoIsThis] search term:', q);
-  console.log('[WhoIsThis] NewsAPI articles returned:', newsBundle.raw.length);
-  console.log('[WhoIsThis] first 3 article titles:', titles.slice(0, 3));
+  if (import.meta.env.DEV) {
+    console.info('[WhoIsThis] Lookup request fired for:', q);
+    console.info('[WhoIsThis] NewsAPI articles returned:', newsBundle.raw.length);
+  }
   if (newsBundle.raw.length === 0) {
     return {
       profile: null,

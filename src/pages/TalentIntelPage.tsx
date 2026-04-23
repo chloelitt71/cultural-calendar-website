@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react';
 import type { TalentIntelProfile } from '../talentIntel/types';
 import { assembleTalentIntelProfile } from '../services/talentIntelProfileAssembler';
+import { SaveToProjectButton } from '../components/SaveToProjectButton';
 
 function ExternalGlyph({ className }: { className?: string }) {
   return (
@@ -22,23 +23,58 @@ function ExternalGlyph({ className }: { className?: string }) {
   );
 }
 
+function buildProfileDescriptors(profile: TalentIntelProfile): string[] {
+  const descriptors: string[] = [];
+  const role = profile.sector.trim();
+  if (role) descriptors.push(role);
+
+  const context = `${profile.onlinePersonality} ${profile.audienceStyle}`.toLowerCase();
+  const specializationRules: Array<{ label: string; test: RegExp }> = [
+    { label: 'Film & TV', test: /\b(actor|actress|film|tv|series|streaming|box office|cast|premiere)\b/ },
+    { label: 'Comedy', test: /\b(comedic|comedy|funny|satire)\b/ },
+    { label: 'Beauty', test: /\b(beauty|makeup|skincare|glam)\b/ },
+    { label: 'Fashion', test: /\b(fashion|style|runway|red carpet)\b/ },
+    { label: 'Pop', test: /\b(pop|single|album|tour|music)\b/ },
+    { label: 'Sports', test: /\b(athlete|nba|nfl|mlb|fifa|olympic|tennis|formula 1|ufc)\b/ },
+    { label: 'Lifestyle', test: /\b(lifestyle|wellness|daily|vlog)\b/ },
+  ];
+
+  const specialization = specializationRules.find((rule) => rule.test.test(context))?.label;
+  if (specialization && !descriptors.includes(specialization)) {
+    descriptors.push(specialization);
+  }
+
+  return descriptors.slice(0, 3);
+}
+
 function ProfileCard({ profile }: { profile: TalentIntelProfile }) {
+  const descriptors = buildProfileDescriptors(profile);
+
   return (
-    <div className="relative overflow-hidden rounded-[1.35rem] border border-[#c9a96e]/20 bg-gradient-to-br from-[#141210]/95 to-black/60 shadow-[0_0_0_1px_rgba(201,169,110,0.08)]">
-      <div className="pointer-events-none absolute -right-24 top-0 h-56 w-56 rounded-full bg-[#c9a96e]/12 blur-3xl" />
+    <div className="relative overflow-hidden rounded-[1.35rem] border border-[#c84c2f]/20 bg-white shadow-[0_0_0_1px_rgba(201,169,110,0.08)]">
+      <div className="pointer-events-none absolute -right-24 top-0 h-56 w-56 rounded-lg bg-[#c84c2f]/12 blur-3xl" />
       <div className="relative grid gap-8 p-6 md:gap-10 md:p-8">
         <div className="min-w-0 space-y-6">
           <header>
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#c9a96e]/90">Who Is This?</p>
-            <h2 className="mt-1 font-display text-[1.85rem] leading-tight text-zinc-50 md:text-[2.1rem]">{profile.name}</h2>
-            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-zinc-400">
-              <span>
-                <span className="text-zinc-600">Sector ·</span> {profile.sector}
-              </span>
-              <span>
-                <span className="text-zinc-600">Location ·</span> {profile.location}
-              </span>
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#c84c2f]/90">Who Is This?</p>
+            <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
+              <h2 className="font-display text-[1.85rem] leading-tight text-zinc-50 md:text-[2.1rem]">{profile.name}</h2>
+              <SaveToProjectButton
+                item={{
+                  type: 'lookup',
+                  sourceId: profile.name.toLowerCase().replace(/\s+/g, '-'),
+                  originPage: 'talent-intel',
+                  title: profile.name,
+                  subtitle: descriptors.join(' • '),
+                  description: profile.audienceStyle,
+                  metadata: {
+                    sector: profile.sector,
+                    coverageCount: String(profile.recentCoverage.length),
+                  },
+                }}
+              />
             </div>
+            {descriptors.length > 0 && <p className="mt-3 font-mono text-xs uppercase tracking-[0.14em] text-zinc-500">{descriptors.join(' • ')}</p>}
           </header>
 
           <section className="space-y-3">
@@ -65,7 +101,7 @@ function ProfileCard({ profile }: { profile: TalentIntelProfile }) {
                       href={b.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 inline-flex items-center gap-1 font-mono text-xs text-[#c9a96e] hover:text-[#e8d5a3]"
+                      className="mt-2 inline-flex items-center gap-1 font-mono text-xs text-[#c84c2f] hover:text-[#c84c2f]"
                     >
                       View source
                       <ExternalGlyph className="h-3 w-3" />
@@ -102,52 +138,33 @@ function ProfileCard({ profile }: { profile: TalentIntelProfile }) {
   );
 }
 
-type DebugStatus = 'idle' | 'loading' | 'success' | 'no_results' | 'error';
-
 export function TalentIntelPage() {
   const [q, setQ] = useState('');
   const [profile, setProfile] = useState<TalentIntelProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
-  const [debug, setDebug] = useState<{
-    searchTerm: string;
-    status: DebugStatus;
-    articleCount: number;
-    firstThreeTitles: string[];
-  }>({
-    searchTerm: '',
-    status: 'idle',
-    articleCount: 0,
-    firstThreeTitles: [],
-  });
+  const newsApiKey = import.meta.env.VITE_NEWS_API_KEY as string | undefined;
+  const hasNewsApiKey = Boolean(newsApiKey?.trim());
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     const term = q.trim();
     if (!term) return;
+    if (!hasNewsApiKey) {
+      setError('Lookup is temporarily unavailable. Please try again shortly.');
+      setProfile(null);
+      return;
+    }
     setHasSearched(true);
     setLoading(true);
     setError(null);
     setProfile(null);
-    setDebug({
-      searchTerm: term,
-      status: 'loading',
-      articleCount: 0,
-      firstThreeTitles: [],
-    });
     try {
       const result = await assembleTalentIntelProfile(term);
       setProfile(result.profile);
-      setDebug({
-        searchTerm: result.debug.searchTerm,
-        status: result.debug.requestStatus,
-        articleCount: result.debug.articleCount,
-        firstThreeTitles: result.debug.firstThreeTitles,
-      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not build profile');
-      setDebug((d) => ({ ...d, status: 'error' }));
     } finally {
       setLoading(false);
     }
@@ -156,47 +173,10 @@ export function TalentIntelPage() {
   return (
     <div className="page-transition section-shell pb-24 pt-8">
       <header className="mb-10 max-w-3xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#c9a96e]">Who Is This?</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#c84c2f]">Who Is This?</p>
         <h1 className="mt-2 font-display text-[2rem] leading-tight text-zinc-50 md:text-[2.45rem]">Quick PR lookup</h1>
-        <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-          Type a name to generate a fast PR snapshot from recent coverage. This version uses NewsAPI as the source of truth and focuses on usable briefing
-          fields over perfect completeness.
-        </p>
-        {import.meta.env.DEV && (
-          <p className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-400">
-            Source used: NewsAPI only
-          </p>
-        )}
+        <p className="mt-3 text-sm leading-relaxed text-zinc-400">Type a name to generate a quick PR snapshot based on recent coverage.</p>
       </header>
-
-      {import.meta.env.DEV && (
-        <section className="mb-8 rounded-xl border border-[#c9a96e]/30 bg-[#c9a96e]/6 p-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#c9a96e]">Who Is This? debug</p>
-          <div className="mt-2 grid gap-1.5 text-xs text-zinc-300">
-            <p>
-              <span className="text-zinc-500">Current search term:</span> {debug.searchTerm || '—'}
-            </p>
-            <p>
-              <span className="text-zinc-500">NewsAPI request status:</span> {debug.status}
-            </p>
-            <p>
-              <span className="text-zinc-500">Articles returned:</span> {debug.articleCount}
-            </p>
-            <div>
-              <p className="text-zinc-500">First 3 article titles:</p>
-              {debug.firstThreeTitles.length === 0 ? (
-                <p className="mt-1 text-zinc-500">—</p>
-              ) : (
-                <ul className="mt-1 list-inside list-disc space-y-0.5 text-zinc-200">
-                  {debug.firstThreeTitles.map((title, idx) => (
-                    <li key={`${idx}-${title}`}>{title}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
 
       <form onSubmit={onSubmit} className="mb-10 max-w-2xl space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -210,40 +190,36 @@ export function TalentIntelPage() {
           <button
             type="submit"
             disabled={loading || !q.trim()}
-            className="rounded-xl border border-[#c9a96e]/50 bg-[#c9a96e]/15 px-6 py-3 font-semibold text-[#e8d5a3] transition hover:bg-[#c9a96e]/25 disabled:opacity-40"
+            className="rounded-xl border border-[#c84c2f]/50 bg-[#c84c2f]/15 px-6 py-3 font-semibold text-[#c84c2f] transition hover:bg-[#c84c2f]/25 disabled:opacity-40"
           >
             {loading ? 'Building brief…' : 'Run lookup'}
           </button>
         </div>
-        {error && <p className="text-sm text-amber-300/90">{error}</p>}
+        {error && <p className="text-sm text-[#8f3b2a]">{error}</p>}
       </form>
 
       {loading && (
         <div className="space-y-4">
           <div className="h-48 animate-pulse rounded-[1.35rem] border border-white/8 bg-white/[0.03]" />
-          <p className="font-mono text-xs text-zinc-500">Pulling sources and assembling briefing…</p>
+          <p className="font-mono text-xs text-zinc-500">Building profile snapshot…</p>
         </div>
       )}
 
       {!loading && profile && <ProfileCard profile={profile} />}
 
       {!loading && !profile && (
-        <div className="rounded-[1.2rem] border border-white/10 bg-black/25 p-8 text-sm text-zinc-500">
+        <div className="rounded-[1.2rem] border border-white/10 bg-white p-8 text-sm text-zinc-500">
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">
             {hasSearched ? 'No coverage found' : 'Start a lookup'}
           </p>
           <p className="mt-3 max-w-xl leading-relaxed">
             {hasSearched
-              ? 'No matching NewsAPI articles were returned for this search. Try an alternate spelling or add another keyword.'
-              : 'Enter a name to generate a quick PR briefing from NewsAPI coverage. Set VITE_NEWS_API_KEY in your environment.'}
+              ? 'No recent coverage in the past 30 days.'
+              : 'Search a name to generate a quick PR snapshot based on recent coverage.'}
           </p>
+          {!hasSearched && <p className="mt-3 text-xs text-zinc-500">Try searching: Zendaya, Alix Earle, Timothee Chalamet</p>}
         </div>
       )}
-
-      <p className="mt-12 border-t border-white/8 pt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">
-        News setup: <span className="text-zinc-500">VITE_NEWS_API_KEY</span> · endpoint proxied via <span className="text-zinc-500">/news-api</span> in
-        dev.
-      </p>
     </div>
   );
 }

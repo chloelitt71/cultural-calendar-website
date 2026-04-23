@@ -55,7 +55,7 @@ export async function fetchLiveEventsFromTicketmaster(apiKey: string | undefined
         location: loc,
         category,
         subcategory,
-        source: 'Ticketmaster',
+        source: 'Live Events',
         whyItMattersForBrands: buildBrandWhy({ category, subcategory, title }),
         timingPriorityScore: defaultTimingPriority({ startMs, category }),
         description: seg ? `${seg}${ev.classifications?.[0]?.genre?.name ? ` · ${ev.classifications[0].genre.name}` : ''}` : undefined,
