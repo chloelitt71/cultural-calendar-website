@@ -15,6 +15,14 @@ export default async function handler(req: any, res: any) {
   }
 
   if (!target.searchParams.get('apiKey')) {
+    const env = (globalThis as any)?.process?.env as Record<string, string | undefined> | undefined;
+    const serverKey = env?.NEWS_API_KEY ?? env?.VITE_NEWS_API_KEY;
+    if (serverKey) {
+      target.searchParams.set('apiKey', serverKey);
+    }
+  }
+
+  if (!target.searchParams.get('apiKey')) {
     res.status(400).json({ status: 'error', code: 'api_key_missing', message: 'Missing NewsAPI key.' });
     return;
   }
