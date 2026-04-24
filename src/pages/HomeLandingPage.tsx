@@ -53,8 +53,8 @@ export function HomeLandingPage({ onNavigate }: { onNavigate: (tab: AppTab) => v
       {/* 1. Hero — nothing else above the fold except this block */}
       <header className="max-w-4xl">
         <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-[#c84c2f]/90">Pulse Cultural Intelligence</p>
-        <h1 className="mt-5 font-display text-[2.35rem] font-semibold leading-[1.06] tracking-tight text-zinc-50 sm:text-6xl md:text-[3.45rem]">
-          Cultural Intelligence for PR Teams
+        <h1 className="mt-5 font-display text-[2.2rem] font-semibold leading-[1.08] tracking-tight text-zinc-50 sm:text-[3.2rem] md:text-[3.25rem]">
+          Cultural Intelligence for Talent Partnership and Marketing Teams
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-400 md:text-lg">
           Track what’s happening, plan around key cultural moments, and find the right talent to activate.
