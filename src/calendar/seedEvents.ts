@@ -18,7 +18,10 @@ function e(
   return { ...row, whyItMattersForBrands: why, timingPriorityScore: score };
 }
 
-type Raw = Omit<CalendarIntelEvent, 'whyItMattersForBrands' | 'timingPriorityScore'>;
+type Raw = Omit<CalendarIntelEvent, 'whyItMattersForBrands' | 'timingPriorityScore'> & {
+  whyItMattersForBrands?: string;
+  timingPriorityScore?: number;
+};
 
 // —— Domain 1: Live Events (concerts, theater, SXSW-style live culture) ——————————————
 
@@ -330,7 +333,7 @@ const MOVIE_RELEASES_ADDITIONAL_RAW: Raw[] = [
     mainCast: ['Ray Romano', 'John Leguizamo', 'Denis Leary'],
     genre: 'Adventure / Family',
     animated: true,
-    industries: ['Entertainment', 'Family', 'Lifestyle'],
+    industries: ['Entertainment', 'Lifestyle'],
     whyItMattersForBrands: 'Late-year family animation drives high group attendance and gifting-oriented brand moments.',
     bestBrandFitCategories: ['family', 'consumer brands', 'food', 'entertainment'],
     suggestedActivationIdea: 'Pair holiday gifting content with family creator theater experiences.',
