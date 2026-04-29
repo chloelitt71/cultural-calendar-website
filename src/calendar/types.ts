@@ -33,6 +33,18 @@ export interface CalendarIntelEvent {
   description?: string;
   region?: Region;
   industries?: Specialty[];
+  /** Optional release metadata for movie/TV planning cards. */
+  mediaType?: 'Movie' | 'TV';
+  season?: 'Summer 2026' | 'Fall 2026' | 'Winter 2027';
+  platformOrStudio?: string;
+  mainCast?: string[];
+  genre?: string;
+  animated?: boolean;
+  seen?: boolean;
+  bestBrandFitCategories?: string[];
+  suggestedActivationIdea?: string;
+  audienceAppeal?: string;
+  talentPartnershipOpportunity?: string;
 }
 
 export type CalendarEventSourceType = 'ticketmaster' | 'tmdb_movie' | 'tmdb_tv' | 'curated';

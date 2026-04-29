@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { EventCard } from '../pulse/EventCard';
 import type { DecoratedCalendarEvent } from '../calendar/types';
-import type { EventStatus } from '../pulse/types';
 import { CATEGORY_PILLS } from '../pulse/data';
 import type { CalendarFilter } from '../calendar/types';
 import { groupEventsByCalendarMonth } from '../utils/calendarGrouping';
@@ -16,7 +15,7 @@ function filterRows(
   rows: DecoratedCalendarEvent[],
   search: string,
   filter: CalendarFilter,
-  status: 'All' | EventStatus,
+  status: 'All timing states' | 'NOW' | 'SOON' | 'COMING',
   showPast: boolean,
 ): DecoratedCalendarEvent[] {
   const term = search.toLowerCase().trim();
@@ -29,13 +28,20 @@ function filterRows(
       event.subcategory,
       event.source,
       event.whyItMattersForBrands,
+      event.mainCast?.join(' '),
+      event.genre,
+      event.date,
     ]
       .filter(Boolean)
       .join(' ')
       .toLowerCase();
     const matchesSearch = term.length === 0 || blob.includes(term);
     const matchesCat = filter === 'All' || event.category === filter;
-    const matchesStatus = status === 'All' || event.computedStatus === status || (status === 'upcoming' && event.computedStatus === 'soon');
+    const matchesStatus =
+      status === 'All timing states' ||
+      (status === 'NOW' && (event.computedStatus === 'now' || event.computedStatus === 'past')) ||
+      (status === 'SOON' && event.computedStatus === 'soon') ||
+      (status === 'COMING' && (event.computedStatus === 'upcoming' || event.computedStatus === 'tbd'));
     const pastOk = showPast || event.computedStatus !== 'past';
     return matchesSearch && matchesCat && matchesStatus && pastOk;
   });
@@ -45,15 +51,37 @@ export function CalendarPage() {
   const { events, loading, error } = useCalendarIntel();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<CalendarFilter>('All');
-  const [status, setStatus] = useState<'All' | EventStatus>('All');
+  const [status, setStatus] = useState<'All timing states' | 'NOW' | 'SOON' | 'COMING'>('All timing states');
   const [sort, setSort] = useState<SortMode>('soonest');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showPast, setShowPast] = useState(false);
   const [gridMonthOffset, setGridMonthOffset] = useState(0);
+  const [seasonFilter, setSeasonFilter] = useState<'All seasons' | 'Summer 2026' | 'Fall 2026' | 'Winter 2027'>('All seasons');
+  const [genreFilter, setGenreFilter] = useState('All genres');
+  const [platformFilter, setPlatformFilter] = useState('All platforms');
+  const [animatedFilter, setAnimatedFilter] = useState<'All' | 'Animated only' | 'Non-animated'>('All');
+  const [brandFitFilter, setBrandFitFilter] = useState('All brand fits');
+
+  const releaseScoped = useMemo(() => events, [events]);
+
+  const releaseFiltered = useMemo(() => {
+    return releaseScoped.filter((event) => {
+      const seasonOk = seasonFilter === 'All seasons' || event.season === seasonFilter;
+      const genreOk = genreFilter === 'All genres' || (event.genre ?? 'Unspecified') === genreFilter;
+      const platformOk = platformFilter === 'All platforms' || (event.platformOrStudio ?? 'Unspecified') === platformFilter;
+      const animatedOk =
+        animatedFilter === 'All' ||
+        (animatedFilter === 'Animated only' && event.animated === true) ||
+        (animatedFilter === 'Non-animated' && event.animated === false);
+      const brandFits = event.bestBrandFitCategories ?? [];
+      const brandFitOk = brandFitFilter === 'All brand fits' || brandFits.includes(brandFitFilter);
+      return seasonOk && genreOk && platformOk && animatedOk && brandFitOk;
+    });
+  }, [releaseScoped, seasonFilter, genreFilter, platformFilter, animatedFilter, brandFitFilter]);
 
   const filtered = useMemo(
-    () => filterRows(events, search, filter, status, showPast),
-    [events, search, filter, status, showPast],
+    () => filterRows(releaseFiltered, search, filter, status, showPast),
+    [releaseFiltered, search, filter, status, showPast],
   );
 
   const sorted = useMemo(() => {
@@ -75,9 +103,21 @@ export function CalendarPage() {
   const later = upcomingRows.filter((e) => isAfterNextTwelveMonthsCalendar(e));
 
   const monthGroups = useMemo(() => groupEventsByCalendarMonth(sorted), [sorted]);
+  const releaseGenres = useMemo(
+    () => ['All genres', ...Array.from(new Set(releaseScoped.map((event) => event.genre ?? 'Unspecified')))],
+    [releaseScoped],
+  );
+  const releasePlatforms = useMemo(
+    () => ['All platforms', ...Array.from(new Set(releaseScoped.map((event) => event.platformOrStudio ?? 'Unspecified')))],
+    [releaseScoped],
+  );
+  const releaseBrandFits = useMemo(
+    () => ['All brand fits', ...Array.from(new Set(releaseScoped.flatMap((event) => event.bestBrandFitCategories ?? [])))],
+    [releaseScoped],
+  );
 
   const isDefaultFilters =
-    filter === 'All' && search.trim() === '' && status === 'All' && !showPast;
+    filter === 'All' && search.trim() === '' && status === 'All timing states' && !showPast;
 
   const renderRows = (rows: DecoratedCalendarEvent[], muted = false) => {
     if (rows.length === 0) {
@@ -86,7 +126,7 @@ export function CalendarPage() {
       );
     }
     return (
-      <div className={viewMode === 'list' ? 'space-y-4' : 'grid gap-5 md:grid-cols-2 xl:grid-cols-2'}>
+      <div className={viewMode === 'list' ? 'space-y-4' : 'grid items-start gap-5 md:grid-cols-2 xl:grid-cols-2'}>
         {rows.map((event) => (
           <EventCard key={event.id} event={event} status={muted ? 'past' : event.computedStatus} muted={muted} />
         ))}
@@ -161,15 +201,13 @@ export function CalendarPage() {
           </div>
           <select
             value={status}
-            onChange={(ev) => setStatus(ev.target.value as 'All' | EventStatus)}
+            onChange={(ev) => setStatus(ev.target.value as 'All timing states' | 'NOW' | 'SOON' | 'COMING')}
             className="saas-input rounded-xl px-3 py-2 text-xs text-zinc-100"
           >
-            <option value="All">All timing states</option>
-            <option value="now">Now</option>
-            <option value="soon">Soon</option>
-            <option value="upcoming">Upcoming</option>
-            <option value="tbd">TBD</option>
-            <option value="past">Past</option>
+            <option value="All timing states">All timing states</option>
+            <option value="NOW">NOW</option>
+            <option value="SOON">SOON</option>
+            <option value="COMING">COMING</option>
           </select>
         </div>
 
@@ -187,11 +225,62 @@ export function CalendarPage() {
                     : 'border-[#e0ddd8] bg-white text-zinc-400 hover:border-[#d6d1c9] hover:text-zinc-100'
                 }`}
               >
-                {pill}
+                {pill === 'Movie Premieres' ? 'Movie Releases' : pill === 'TV Premieres' ? 'TV Releases' : pill}
               </button>
             ))}
           </div>
         </div>
+
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <select
+              value={seasonFilter}
+              onChange={(ev) => setSeasonFilter(ev.target.value as 'All seasons' | 'Summer 2026' | 'Fall 2026' | 'Winter 2027')}
+              className="saas-input rounded-xl px-3 py-2 text-xs text-zinc-100"
+            >
+              <option value="All seasons">All seasons</option>
+              <option value="Summer 2026">Summer 2026</option>
+              <option value="Fall 2026">Fall 2026</option>
+              <option value="Winter 2027">Winter 2027</option>
+            </select>
+            <select value={genreFilter} onChange={(ev) => setGenreFilter(ev.target.value)} className="saas-input rounded-xl px-3 py-2 text-xs text-zinc-100">
+              {releaseGenres.map((genre) => (
+                <option key={genre} value={genre}>
+                  {genre}
+                </option>
+              ))}
+            </select>
+            <select
+              value={platformFilter}
+              onChange={(ev) => setPlatformFilter(ev.target.value)}
+              className="saas-input rounded-xl px-3 py-2 text-xs text-zinc-100"
+            >
+              {releasePlatforms.map((platform) => (
+                <option key={platform} value={platform}>
+                  {platform}
+                </option>
+              ))}
+            </select>
+            <select
+              value={animatedFilter}
+              onChange={(ev) => setAnimatedFilter(ev.target.value as 'All' | 'Animated only' | 'Non-animated')}
+              className="saas-input rounded-xl px-3 py-2 text-xs text-zinc-100"
+            >
+              <option value="All">All animation</option>
+              <option value="Animated only">Animated only</option>
+              <option value="Non-animated">Non-animated</option>
+            </select>
+            <select
+              value={brandFitFilter}
+              onChange={(ev) => setBrandFitFilter(ev.target.value)}
+              className="saas-input rounded-xl px-3 py-2 text-xs text-zinc-100"
+            >
+              {releaseBrandFits.map((fit) => (
+                <option key={fit} value={fit}>
+                  {fit}
+                </option>
+              ))}
+            </select>
+          </div>
       </section>
 
       {viewMode === 'calendar' ? (

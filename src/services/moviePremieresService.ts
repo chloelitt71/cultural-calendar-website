@@ -1,6 +1,7 @@
 import { buildBrandWhy, defaultTimingPriority } from '../calendar/brandWhy';
 import type { CalendarIntelEvent } from '../calendar/types';
 import { MOVIE_PREMIERES_INTEL_SEED } from '../calendar/seedEvents';
+import { movies } from '../data/movies';
 
 const IMG = 'https://image.tmdb.org/t/p/w500';
 
@@ -61,5 +62,34 @@ export async function fetchMoviePremieresFromTmdb(apiKey: string | undefined): P
 export async function loadMoviePremieresIntel(apiKey?: string): Promise<CalendarIntelEvent[]> {
   const key = apiKey ?? (import.meta.env.VITE_TMDB_API_KEY as string | undefined);
   const remote = await fetchMoviePremieresFromTmdb(key);
-  return [...MOVIE_PREMIERES_INTEL_SEED, ...remote];
+  const supplemental = movies
+    .filter((row) => row.type === 'Film')
+    .map<CalendarIntelEvent>((row) => {
+      const startMs = new Date(`${row.date}T12:00:00Z`).getTime();
+      return {
+        id: `movie-prompt-${row.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${row.date}`,
+        title: row.title,
+        date: new Date(`${row.date}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        startDate: row.date,
+        endDate: row.date,
+        location: row.region || 'North America',
+        category: 'Movie Premieres',
+        subcategory: row.genre || 'Film release',
+        source: 'Curated',
+        whyItMattersForBrands:
+          row.whyItMattersForBrands ||
+          buildBrandWhy({ category: 'Movie Premieres', subcategory: row.genre || 'Film release', title: row.title }),
+        timingPriorityScore: defaultTimingPriority({ startMs, category: 'Movie Premieres' }),
+        mediaType: 'Movie',
+        mainCast: row.cast.split(',').map((s) => s.trim()).filter(Boolean),
+        genre: row.genre,
+        animated: row.genre.toLowerCase().includes('animation'),
+        seen: row.seen,
+      };
+    });
+
+  const deduped = [...MOVIE_PREMIERES_INTEL_SEED, ...supplemental, ...remote].filter(
+    (event, index, arr) => arr.findIndex((x) => `${x.title}|${x.startDate}` === `${event.title}|${event.startDate}`) === index,
+  );
+  return deduped;
 }
